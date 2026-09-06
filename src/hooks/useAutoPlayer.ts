@@ -15,6 +15,7 @@ export interface AutoPlayerState {
   /** 次の読み上げまでの残り秒数。1秒ごとに減る */
   readonly remainingSec: number | null;
   toggle(): void;
+  stop(): void;
 }
 
 /** カウントダウンの更新間隔。1000msだと表示が1秒飛ぶことがあるので細かく刻む */
@@ -40,19 +41,24 @@ export function useAutoPlayer(
   const [spokenSeq, setSpokenSeq] = useState(0);
 
   const techniquesRef = useRef(techniques);
-  techniquesRef.current = techniques;
   const settingsRef = useRef(settings);
-  settingsRef.current = settings;
+
+  // 最新のpropsをrefへ橋渡しする。AutoPlayerが読むのはタイマー発火時(=コミット後)なので、
+  // レンダー中に書かずeffectで同期すれば十分
+  useEffect(() => {
+    techniquesRef.current = techniques;
+    settingsRef.current = settings;
+  }, [techniques, settings]);
 
   const bagRef = useRef<ShuffleBag<Technique> | null>(null);
   const playerRef = useRef<AutoPlayer | null>(null);
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 初回レンダリング時に1度だけ組み立てる(遅延初期化)
-  if (playerRef.current === null) {
+  // マウント時に1度だけ組み立てる。
+  // レンダー中に作るとrefへの読み書きがレンダーの副作用になるため、effectに寄せている
+  useEffect(() => {
     const bag = new ShuffleBag<Technique>(() => techniquesRef.current);
-    bagRef.current = bag;
-    playerRef.current = new AutoPlayer(
+    const player = new AutoPlayer(
       speaker,
       new TimeoutScheduler(),
       bag,
@@ -74,7 +80,17 @@ export function useAutoPlayer(
         },
       },
     );
-  }
+    bagRef.current = bag;
+    playerRef.current = player;
+
+    // アンマウント時のクリーンアップ(音声・タイマーのリーク防止)
+    return () => {
+      player.stop();
+      if (revealTimerRef.current !== null) clearTimeout(revealTimerRef.current);
+      bagRef.current = null;
+      playerRef.current = null;
+    };
+  }, [speaker, revealDelayMs]);
 
   // 読み上げごとにカウントダウンを張り直す。
   // 残り秒は毎回「締切 - 現在時刻」から計算するので、tickの誤差が蓄積しない
@@ -95,14 +111,6 @@ export function useAutoPlayer(
     bagRef.current?.invalidate();
   }, [techniques]);
 
-  // アンマウント時のクリーンアップ(音声・タイマーのリーク防止)
-  useEffect(() => {
-    return () => {
-      playerRef.current?.stop();
-      if (revealTimerRef.current !== null) clearTimeout(revealTimerRef.current);
-    };
-  }, []);
-
   const toggle = (): void => {
     const player = playerRef.current;
     if (player === null) return;
@@ -114,5 +122,9 @@ export function useAutoPlayer(
     }
   };
 
-  return { isRunning, current, isRevealed, nextWaitSec, remainingSec, toggle };
+  const stop = (): void => {
+    playerRef.current?.stop();
+  };
+
+  return { isRunning, current, isRevealed, nextWaitSec, remainingSec, toggle, stop };
 }

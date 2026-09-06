@@ -4,11 +4,13 @@
  */
 export class ShuffleBag<T> {
   private bag: T[] = [];
+  private readonly source: () => readonly T[];
+  private readonly random: () => number;
 
-  constructor(
-    private readonly source: () => readonly T[],
-    private readonly random: () => number = Math.random,
-  ) {}
+  constructor(source: () => readonly T[], random: () => number = Math.random) {
+    this.source = source;
+    this.random = random;
+  }
 
   next(): T | undefined {
     if (this.bag.length === 0) this.refill();

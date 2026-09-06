@@ -14,13 +14,25 @@ export class AutoPlayer {
   private cancelNext: CancelFn | null = null;
   private running = false;
 
+  private readonly speaker: Speaker;
+  private readonly scheduler: Scheduler;
+  private readonly bag: ShuffleBag<Technique>;
+  private readonly getSettings: () => Settings;
+  private readonly listener: AutoPlayerListener;
+
   constructor(
-    private readonly speaker: Speaker,
-    private readonly scheduler: Scheduler,
-    private readonly bag: ShuffleBag<Technique>,
-    private readonly getSettings: () => Settings,
-    private readonly listener: AutoPlayerListener,
-  ) {}
+    speaker: Speaker,
+    scheduler: Scheduler,
+    bag: ShuffleBag<Technique>,
+    getSettings: () => Settings,
+    listener: AutoPlayerListener,
+  ) {
+    this.speaker = speaker;
+    this.scheduler = scheduler;
+    this.bag = bag;
+    this.getSettings = getSettings;
+    this.listener = listener;
+  }
 
   get isRunning(): boolean {
     return this.running;

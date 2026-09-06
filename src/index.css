@@ -99,6 +99,26 @@ main {
   margin: 0;
 }
 
+.grade-tabs {
+  margin: 0 0 16px;
+}
+
+.grade-tabs .segmented-button {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.empty-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 160%;
+  color: var(--text);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+}
+
 /* --- カード --- */
 
 .card {

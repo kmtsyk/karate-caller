@@ -1,3 +1,5 @@
+import type { Grade } from '../domain/grade';
+import { DEFAULT_GRADE, isGrade } from '../domain/grade';
 import type { Settings } from '../domain/technique';
 import { DEFAULT_SETTINGS } from '../domain/technique';
 import type { ThemeSetting } from '../domain/theme';
@@ -18,16 +20,17 @@ export class LocalStorageStore implements KeyValueStore {
   }
 }
 
-export const DEFAULT_LIST = [
+const KYU4_LIST = [
   // 突き・打ち
-  '上段突き,じょうだんづき',
-  '中段突き,ちゅうだんづき',
-  '直突き,ちょくづき',
-  '上段廻し打ち,じょうだんまわしうち',
-  '中段廻し打ち,ちゅうだんまわしうち',
-  '下突き,したづき',
-  '顎打ち(鉤突き),あごうち',
-  '鎖骨打ち,さこつうち',
+  '正拳上段突き,せいけんじょうだんづき',
+  '正拳中段突き,せいけんちゅうだんづき',
+  '正拳直突き,せいけんちょくづき',
+  '正拳上段廻し打ち,せいけんじょうだんまわしうち',
+  '正拳中段廻し打ち,せいけんちゅうだんまわしうち',
+  '正拳下突き,せいけんしたづき',
+  '正拳顎打ち(鉤突き),せいけんあごうち',
+  '正拳鎖骨打ち,せいけんさこつうち',
+  // 裏拳
   '裏拳正面打ち,うらけんしょうめんうち',
   '裏拳左右打ち,うらけんさゆううち',
   '裏拳脾臓打ち,うらけんひぞううち',
@@ -87,24 +90,72 @@ export const DEFAULT_LIST = [
   '右後受身,みぎうしろうけみ',
 ].join('\n');
 
-export class TechniqueListRepository {
-  private static readonly KEY = 'karateCaller:list';
-  constructor(private readonly store: KeyValueStore) {}
+/**
+ * 級ごとの初期リスト。
+ * 4級は本人から受け取った審査科目。3〜1級は内容が未確認なので空にしてある
+ * (推測で埋めると練習内容そのものが間違うため、アプリ内で貼り付けてもらう)。
+ */
+const DEFAULT_LISTS: Record<Grade, string> = {
+  kyu4: KYU4_LIST,
+  kyu3: '',
+  kyu2: '',
+  kyu1: '',
+};
 
-  load(): string {
-    const raw = this.store.get(TechniqueListRepository.KEY);
-    // 空・空白のみの保存値は「未設定」扱い。空文字列だとnull合体が効かず永久に空のままになる
-    if (raw === null || raw.trim().length === 0) return DEFAULT_LIST;
-    return raw;
+export function defaultListOf(grade: Grade): string {
+  return DEFAULT_LISTS[grade];
+}
+
+export class TechniqueListRepository {
+  /** 級ごとに分ける前の単一キー。既存端末の編集内容を4級として引き継ぐために見る */
+  private static readonly LEGACY_KEY = 'karateCaller:list';
+  private readonly store: KeyValueStore;
+  constructor(store: KeyValueStore) {
+    this.store = store;
   }
-  save(raw: string): void {
-    this.store.set(TechniqueListRepository.KEY, raw);
+
+  load(grade: Grade): string {
+    const raw = this.store.get(keyOf(grade));
+    // 空・空白のみの保存値は「未設定」扱い。空文字列だとnull合体が効かず永久に空のままになる
+    if (raw !== null && raw.trim().length > 0) return raw;
+
+    if (grade === 'kyu4') {
+      const legacy = this.store.get(TechniqueListRepository.LEGACY_KEY);
+      if (legacy !== null && legacy.trim().length > 0) return legacy;
+    }
+    return DEFAULT_LISTS[grade];
+  }
+  save(grade: Grade, raw: string): void {
+    this.store.set(keyOf(grade), raw);
+  }
+}
+
+function keyOf(grade: Grade): string {
+  return `karateCaller:list:${grade}`;
+}
+
+export class GradeRepository {
+  private static readonly KEY = 'karateCaller:grade';
+  private readonly store: KeyValueStore;
+  constructor(store: KeyValueStore) {
+    this.store = store;
+  }
+
+  load(): Grade {
+    const raw = this.store.get(GradeRepository.KEY);
+    return isGrade(raw) ? raw : DEFAULT_GRADE;
+  }
+  save(grade: Grade): void {
+    this.store.set(GradeRepository.KEY, grade);
   }
 }
 
 export class SettingsRepository {
   private static readonly KEY = 'karateCaller:settings';
-  constructor(private readonly store: KeyValueStore) {}
+  private readonly store: KeyValueStore;
+  constructor(store: KeyValueStore) {
+    this.store = store;
+  }
 
   load(): Settings {
     try {
@@ -123,7 +174,10 @@ export class SettingsRepository {
 export class ThemeRepository {
   /** index.htmlのFOUC防止スクリプトが同じキーを直読みしている。変更時は両方直すこと */
   private static readonly KEY = 'karateCaller:theme';
-  constructor(private readonly store: KeyValueStore) {}
+  private readonly store: KeyValueStore;
+  constructor(store: KeyValueStore) {
+    this.store = store;
+  }
 
   load(): ThemeSetting {
     const raw = this.store.get(ThemeRepository.KEY);
