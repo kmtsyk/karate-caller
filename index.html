@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>空手 型読み上げ</title>
+    <!-- content はuseThemeが現在のテーマの--bgで上書きする -->
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      // Reactのマウント前にdata-themeを確定させ、ダーク設定時の白画面フラッシュを防ぐ。
+      // キーはThemeRepository.KEYと同じ文字列(変更時は両方直すこと)。
+      (function () {
+        try {
+          var saved = localStorage.getItem('karateCaller:theme');
+          var setting =
+            saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'system';
+          var dark =
+            setting === 'dark' ||
+            (setting === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

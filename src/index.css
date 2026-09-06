@@ -1,0 +1,522 @@
+/*
+ * 配色はcreate-viteの既定テンプレート(template-react-ts/src/index.css)の値をそのまま採用。
+ * テンプレートは@media (prefers-color-scheme)で切り替えるが、
+ * ここは手動切り替えも必要なので <html data-theme="light|dark"> で分岐する。
+ * data-themeはuseThemeが付ける(初期値はindex.htmlのインラインスクリプト)。
+ */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light; /* range/スクロールバーなどネイティブ部品の配色 */
+
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --surface: #fff;
+  --surface-2: #f4f3ec;
+  --border: #e5e4e7;
+  --accent: #aa3bff;
+  --accent-contrast: #fff;
+  --accent-bg: rgb(170 59 255 / 10%);
+  --accent-border: rgb(170 59 255 / 50%);
+  --shadow: rgb(0 0 0 / 10%) 0 10px 15px -3px, rgb(0 0 0 / 5%) 0 4px 6px -2px;
+  --shadow-sm: rgb(0 0 0 / 6%) 0 1px 2px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --surface: #1f2028;
+  --surface-2: #2a2c36;
+  --border: #2e303a;
+  --accent: #c084fc;
+  --accent-contrast: #16171d;
+  --accent-bg: rgb(192 132 252 / 15%);
+  --accent-border: rgb(192 132 252 / 50%);
+  --shadow: rgb(0 0 0 / 40%) 0 10px 15px -3px, rgb(0 0 0 / 25%) 0 4px 6px -2px;
+  --shadow-sm: rgb(0 0 0 / 30%) 0 1px 2px;
+}
+
+:root {
+  /* テンプレートと同じフォント指定に、日本語向けのフォールバックを足したもの */
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Hiragino Sans',
+    'Noto Sans JP', sans-serif;
+  --heading: var(--sans);
+  --mono: ui-monospace, 'SF Mono', Consolas, monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  font: 16px/150% var(--sans);
+  letter-spacing: 0.18px;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* 画面上端のアクセントグロー。accent-bgが半透明なので両テーマで成立する */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  height: 240px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(70% 100% at 50% 0, var(--accent-bg), transparent);
+}
+
+main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 0 20px;
+}
+
+.app-header h1 {
+  font-family: var(--heading);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.6px;
+  color: var(--text-h);
+  margin: 0;
+}
+
+/* --- カード --- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin: 0 0 16px;
+}
+
+.card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--heading);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 140%;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.card h2::before {
+  content: '';
+  flex: none;
+  width: 3px;
+  align-self: stretch;
+  min-height: 14px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* --- 読み上げ表示パネル --- */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 16px;
+  margin-bottom: 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.waza-display {
+  font-family: var(--heading);
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 120%;
+  letter-spacing: -1px;
+  text-align: center;
+  color: var(--text-h);
+  min-height: 48px;
+  margin: 0;
+}
+
+/* 答えを隠している間は主役から降りる */
+.waza-display.is-masked {
+  color: var(--text);
+  opacity: 0.45;
+}
+
+.yomi-display {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--text);
+  min-height: 20px;
+  margin: 0;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 6px 0 0;
+  padding: 4px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.status.is-running {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.status.is-running .status-dot {
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status.is-running .status-dot {
+    animation: none;
+  }
+}
+
+/* --- ボタン --- */
+
+button {
+  font-family: var(--sans);
+  font-size: 17px;
+  letter-spacing: inherit;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible,
+.segmented-item:has(input:focus-visible) span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.toggle-button {
+  width: 100%;
+  min-height: 56px; /* 指で押せる44px以上を確保(Apple HIG) */
+  font-family: var(--heading);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: transparent;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow 0.3s,
+    background 0.2s,
+    color 0.2s;
+}
+
+.toggle-button:hover {
+  box-shadow: var(--shadow);
+}
+
+.toggle-button:active {
+  transform: translateY(1px);
+}
+
+/* 停止ボタンは主張を抑え、開始ボタンだけが目立つようにする */
+.toggle-button.is-running {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.tap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.tap-grid button {
+  min-height: 56px;
+  font-size: 16px;
+  font-weight: 500;
+  background: var(--surface-2);
+  border-color: transparent;
+  transition:
+    box-shadow 0.3s,
+    border-color 0.2s;
+}
+
+.tap-grid button:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.tap-grid button:active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* --- セグメント切り替え(テーマ・間隔モード共通) --- */
+
+.segmented {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.card > .segmented {
+  margin-top: 14px;
+}
+
+.segmented-item {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+/* ラジオ本体は隠すが、キーボード操作とスクリーンリーダーには残す */
+.segmented-item input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+}
+
+.segmented-item span,
+.segmented-button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.segmented-item:has(input:checked) span,
+.segmented-button[aria-pressed='true'] {
+  color: var(--text-h);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle {
+  flex: none;
+}
+
+.theme-toggle .segmented-button {
+  flex: none;
+  min-width: 40px;
+  padding: 0;
+}
+
+.theme-toggle .segmented-button[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.theme-toggle svg {
+  display: block; /* inline要素のベースライン隙間で高さがずれるのを防ぐ */
+  width: 17px;
+  height: 17px;
+}
+
+/* --- 行・スライダー・テキストエリア --- */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.row label {
+  font-size: 14px;
+  flex: none;
+}
+
+.row input[type='range'] {
+  flex: 1;
+}
+
+.value-badge {
+  flex: none;
+  min-width: 54px;
+  padding: 3px 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--text-h);
+  background: var(--surface-2);
+  border-radius: 6px;
+}
+
+input[type='range'] {
+  appearance: none;
+  height: 24px;
+  background: transparent;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  font-family: var(--mono);
+  font-size: 16px; /* 16px未満はiOS Safariでフォーカス時に勝手にズームされる */
+  line-height: 165%;
+  color: var(--text-h);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+textarea:hover {
+  border-color: var(--border);
+}
+
+select {
+  flex: 1;
+  min-width: 0; /* flex内でselectが縮まずカードを突き破るのを防ぐ */
+  min-height: 36px;
+  padding: 0 8px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 140%;
+  color: var(--text);
+}
+
+.hint-block {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.text-button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border-color: transparent;
+}
+
+.text-button:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* アイコンだけのボタンでもスクリーンリーダーに意味が伝わるようにする */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
