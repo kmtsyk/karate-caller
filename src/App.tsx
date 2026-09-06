@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { defaultListOf } from './data/defaultLists';
 import { parseTechniques } from './domain/parser';
 import type { Grade } from './domain/grade';
 import { GRADES, GRADE_LABELS } from './domain/grade';
@@ -16,7 +17,6 @@ import { WebSpeechSpeaker } from './infrastructure/webSpeechSpeaker';
 import { WebSpeechVoiceCatalog } from './infrastructure/webSpeechVoiceCatalog';
 import { MediaQueryColorScheme } from './infrastructure/mediaQueryColorScheme';
 import {
-  defaultListOf,
   GradeRepository,
   LocalStorageStore,
   SettingsRepository,

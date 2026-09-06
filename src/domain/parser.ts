@@ -5,12 +5,13 @@ const KANA_PATTERN = /^[ぁ-んァ-ヶー・\s]+$/u;
 /**
  * 「表示名,読み,秒数」形式をパースする(読み・秒数は順不同かつ省略可)。
  * フィールドの内容で役割を判別: 正の数値 → 秒数、かなのみ → 読み。
+ * 空行と「#」始まりの行(分類の見出しなど)は無視する。
  */
 export function parseTechniques(raw: string): Technique[] {
   return raw
     .split('\n')
     .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+    .filter((line) => line.length > 0 && !line.startsWith('#'))
     .map(parseLine)
     .filter((t): t is Technique => t !== null);
 }
