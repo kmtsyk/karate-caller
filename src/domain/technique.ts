@@ -8,8 +8,12 @@ export interface Technique {
 
 export type IntervalMode = 'uniform' | 'perTechnique';
 
+/** 出題順。間隔の決め方とは独立した軸 */
+export type OrderMode = 'random' | 'sequential';
+
 export interface Settings {
   readonly mode: IntervalMode;
+  readonly order: OrderMode;
   readonly uniformIntervalSec: number;
   /** 使う音声のURI。nullなら端末の日本語音声から自動選択 */
   readonly voiceUri: string | null;
@@ -21,6 +25,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   mode: 'uniform',
+  order: 'random',
   uniformIntervalSec: 5,
   voiceUri: null,
   rate: 0.9,

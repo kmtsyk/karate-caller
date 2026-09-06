@@ -329,8 +329,15 @@ input:focus-visible,
   border-radius: 11px;
 }
 
-.card > .segmented {
+.field {
   margin-top: 14px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text);
 }
 
 .segmented-item {

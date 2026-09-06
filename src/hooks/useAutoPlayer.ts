@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Settings, Technique } from '../domain/technique';
+import type { Picker } from '../domain/picker';
+import { OrderModePicker, SequentialPicker } from '../domain/picker';
 import { ShuffleBag } from '../domain/shuffleBag';
 import { AutoPlayer } from '../application/autoPlayer';
 import type { Speaker } from '../application/ports';
@@ -50,18 +52,23 @@ export function useAutoPlayer(
     settingsRef.current = settings;
   }, [techniques, settings]);
 
-  const bagRef = useRef<ShuffleBag<Technique> | null>(null);
+  const pickerRef = useRef<Picker<Technique> | null>(null);
   const playerRef = useRef<AutoPlayer | null>(null);
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // マウント時に1度だけ組み立てる。
   // レンダー中に作るとrefへの読み書きがレンダーの副作用になるため、effectに寄せている
   useEffect(() => {
-    const bag = new ShuffleBag<Technique>(() => techniquesRef.current);
+    const source = (): readonly Technique[] => techniquesRef.current;
+    const picker = new OrderModePicker<Technique>(
+      () => settingsRef.current.order,
+      new ShuffleBag<Technique>(source),
+      new SequentialPicker<Technique>(source),
+    );
     const player = new AutoPlayer(
       speaker,
       new TimeoutScheduler(),
-      bag,
+      picker,
       () => settingsRef.current,
       {
         onSpoken: (technique, waitSec) => {
@@ -80,14 +87,14 @@ export function useAutoPlayer(
         },
       },
     );
-    bagRef.current = bag;
+    pickerRef.current = picker;
     playerRef.current = player;
 
     // アンマウント時のクリーンアップ(音声・タイマーのリーク防止)
     return () => {
       player.stop();
       if (revealTimerRef.current !== null) clearTimeout(revealTimerRef.current);
-      bagRef.current = null;
+      pickerRef.current = null;
       playerRef.current = null;
     };
   }, [speaker, revealDelayMs]);
@@ -108,7 +115,7 @@ export function useAutoPlayer(
 
   // リストが編集されたら進行中の巡回を破棄する
   useEffect(() => {
-    bagRef.current?.invalidate();
+    pickerRef.current?.invalidate();
   }, [techniques]);
 
   const toggle = (): void => {

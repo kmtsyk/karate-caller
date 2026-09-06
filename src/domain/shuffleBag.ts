@@ -1,8 +1,10 @@
+import type { Picker } from './picker';
+
 /**
  * 全要素を1巡するまで重複させない抽選器(Fisher–Yates)。
  * 乱数源を注入可能にし、テストで抽選順を固定できるようにしている。
  */
-export class ShuffleBag<T> {
+export class ShuffleBag<T> implements Picker<T> {
   private bag: T[] = [];
   private readonly source: () => readonly T[];
   private readonly random: () => number;

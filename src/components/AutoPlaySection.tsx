@@ -1,4 +1,4 @@
-import type { IntervalMode, Settings } from '../domain/technique';
+import type { IntervalMode, OrderMode, Settings } from '../domain/technique';
 import type { AutoPlayerState } from '../hooks/useAutoPlayer';
 
 interface Props {
@@ -10,6 +10,11 @@ interface Props {
 const MODE_LABELS: Record<IntervalMode, string> = {
   uniform: '一律秒数',
   perTechnique: '型ごとの秒数',
+};
+
+const ORDER_LABELS: Record<OrderMode, string> = {
+  random: 'ランダム',
+  sequential: '上から順',
 };
 
 export function AutoPlaySection({ player, settings, onSettingsChange }: Props) {
@@ -38,18 +43,38 @@ export function AutoPlaySection({ player, settings, onSettingsChange }: Props) {
         {isRunning ? '■ 停止' : '▶ 開始'}
       </button>
 
-      <div className="segmented" role="radiogroup" aria-label="間隔の決め方">
-        {(Object.keys(MODE_LABELS) as IntervalMode[]).map((mode) => (
-          <label key={mode} className="segmented-item">
-            <input
-              type="radio"
-              name="mode"
-              checked={settings.mode === mode}
-              onChange={() => onSettingsChange({ ...settings, mode })}
-            />
-            <span>{MODE_LABELS[mode]}</span>
-          </label>
-        ))}
+      <div className="field">
+        <span className="field-label">出題順</span>
+        <div className="segmented" role="radiogroup" aria-label="出題順">
+          {(Object.keys(ORDER_LABELS) as OrderMode[]).map((order) => (
+            <label key={order} className="segmented-item">
+              <input
+                type="radio"
+                name="order"
+                checked={settings.order === order}
+                onChange={() => onSettingsChange({ ...settings, order })}
+              />
+              <span>{ORDER_LABELS[order]}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <span className="field-label">間隔の決め方</span>
+        <div className="segmented" role="radiogroup" aria-label="間隔の決め方">
+          {(Object.keys(MODE_LABELS) as IntervalMode[]).map((mode) => (
+            <label key={mode} className="segmented-item">
+              <input
+                type="radio"
+                name="mode"
+                checked={settings.mode === mode}
+                onChange={() => onSettingsChange({ ...settings, mode })}
+              />
+              <span>{MODE_LABELS[mode]}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="row">
